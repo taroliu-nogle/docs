@@ -12,10 +12,13 @@ language_tabs:
 ---
 
 # Change Log
+## Version 3.3.8 (22th February 2023)
+
+* Add [TWAP place order API](#create-new-twap-order)
 
 ## Version 3.3.6 (7th February 2023)
 
-* Update `symbol` parameter as optional in `open_orders`
+* Update `symbol` parameter as optional in [Query User Open Orders](#query-open-orders)
 * Add funding fee data in [Query User Trades Fills](#query-user-trades-fills).
 
 ## Version 3.3.5 (28th November 2022)
@@ -794,6 +797,96 @@ Creates a new order. Requires `Trading` permission.
 | remainingSize    | double  | Yes      | Size left to be transacted                                                                                                                                                                                                                                                                          |
 | originalSize     | double  | Yes      | Original order size                                                                                                                                                                                                                                                                                 |
 
+## Create new TWAP order
+
+> Request
+
+```json
+{
+  "symbol": "BTC-USD",
+  "size": 10,
+  "side": "BUY",
+  "type": "TWAP",
+  "timePeriod": 600
+}
+```
+
+> Response
+
+```json
+[
+    {
+        "status": 2,
+        "symbol": "BTC-USD",
+        "orderType": 82,
+        "price": 0.0,
+        "side": "BUY",
+        "size": 100.0,
+        "orderID": "d32bea7e-c0f1-49da-8b41-8dd63770e1c8",
+        "timestamp": 1675481980576,
+        "triggerPrice": 0.0,
+        "stopPrice": null,
+        "trigger": false,
+        "message": "",
+        "averageFillPrice": 0.0,
+        "fillSize": 0.0,
+        "clOrderID": null,
+        "stealth": 1.0,
+        "deviation": 1.0,
+        "postOnly": false,
+        "originalSize": 100.0,
+        "remainingSize": 100.0,
+        "orderDetailType": "TWAP",
+        "time_in_force": "GTC"
+    }
+]
+```
+`POST /api/v3.2/order/twap` to create a new order. Requires `Trading` permission.
+
+### Request Parameters
+
+| Name          | Type    | Required | Description                                                                                                                                                                                                                                                                                                                                                        |
+| ---           | ---     | ---      | ---                                                                                                                                                                                                                                                                                                                                                                |
+| symbol        | string  | Yes      | Market symbol                                                                                                                                                                                                                                                                                                                                                      |
+| size          | double  | Yes      |  The amount user wants to buy/sell, SELL for base currency and BUY for quote currency                                                                                                                                                                                                                                                                                                                                                        |
+| side          | string  | Yes      | 'BUY' or 'SELL'                                                                                                                                                                                                                                                                                                                                                    |
+| type          | string  | Yes      | TWAP|
+| timePeriod     | integer  | Yes       | The time period in seconds that user wants to finish all the invidual orders  |
+| clOrderID     | string  | No       | Custom order Id  |
+| makerFirst     | boolean  | No       |  Indicates if order is a maker first order. If it is true, system will place limit order first then convert to market if not fully transacted. |
+| randomizeSize     | boolean  | No       | Randomize the invidual order'size or not  |
+| maxSpread     | double  | No       | The invidual order will be skipped if (the lowest ask price - the highest bid price) / the lowest ask price > maxSpread  |
+| maxDistanceThroughBook     | double  | No       | For BUY side <br> The invidual order will be skipped if filled price higher than (last price * (1 + maxDistanceThroughBook))<br>For SELL side<br> The sub order will be skipped if filled price lower than (last price * (1 - maxDistanceThroughBook)|
+| pausePrice     | double  | No       |For BUY side <br> The invidual order will be skipped if filled price higher than pausePrice<br>For SELL side<br>The invidual order will be skipped if filled price lower than pausePrice  |
+| subTwapMaxOrderSize     | double  | No       | Max invidual order's size  |
+
+### Response Content
+
+| Name             | Type    | Required | Description                                                                                                                                                                                                                                                                                         |
+| ---              | ---     | ---      | ---                                                                                                                                                                                                                                                                                                 |
+| symbol           | string  | Yes      | Market symbol                                                                                                                                                                                                                                                                                       |
+| clOrderID        | string  | Yes      | Customer tag sent in by trader                                                                                                                                                                                                                                                                      |
+| fillSize         | string  | Yes      | Trade filled size                                                                                                                                                                                                                                                                                   |
+| orderID          | string  | Yes      | Order ID                                                                                                                                                                                                                                                                                            |
+| orderType        | string  | Yes      | Order type <br/>76: Limit order<br/>77: Market order<br/>80: Peg/Algo order                                                                                                                                                                                                                         |
+| postOnly         | boolean | Yes      | Indicates if order is a post only order                                                                                                                                                                                                                                                             |
+| price            | double  | Yes      | Order price                                                                                                                                                                                                                                                                                         |
+| side             | string  | Yes      | Order side<br/>BUY or SELL                                                                                                                                                                                                                                                                          |
+| size             | double  | Yes      | Order size                                                                                                                                                                                                                                                                                          |
+| status           | integer | Yes      | Order status<br/>	2: Order Inserted<br/>4: Order Fully Transacted<br/>5: Order Partially Transacted<br/>6: Order Cancelled<br/>7: Order Refunded<br/>8: Insufficient Balance<br/>9: Trigger Inserted<br>10: Trigger Activated<br/>15: Order Rejected<br/>16: Order Not Found<br/>17: Request Failed |
+| stopPrice        | string  | Yes      | Stop price                                                                                                                                                                                                                                                                                          |
+| time_in_force    | string  | Yes      | Order validity                                                                                                                                                                                                                                                                                      |
+| timestamp        | string  | Yes      | Order timestamp                                                                                                                                                                                                                                                                                     |
+| trigger          | string  | Yes      | Indicator if order is a trigger order                                                                                                                                                                                                                                                               |
+| triggerPrice     | string  | Yes      | Order trigger price, returns 0 if order is not a trigger order                                                                                                                                                                                                                                      |
+| averageFillPrice | string  | Yes      | Average filled price. Returns the average filled price for partially transacted orders                                                                                                                                                                                                              |
+| message          | string  | Yes      | Trade messages                                                                                                                                                                                                                                                                                      |
+| stealth          | string  | Yes      | Stealth value of order                                                                                                                                                                                                                                                                              |
+| deviation        | string  | Yes      | Deviation value of order                                                                                                                                                                                                                                                                            |
+| remainingSize    | double  | Yes      | Size left to be transacted                                                                                                                                                                                                                                                                          |
+| originalSize     | double  | Yes      | Original order size                                                                                                                                                                                                                                                                                 |
+| orderDetailType     | string  | Yes      |  Order Detail Type Enum <br/>`TWAP` |
+
 ## Amend Order
 
 > Request (amend price)
@@ -846,29 +939,30 @@ Creates a new order. Requires `Trading` permission.
 
 ```json
 [
-  {
-    "status": 15,
-    "symbol": "BTC-null",
-    "orderType": 0,
-    "price": 0.0,
-    "side": "BUY",
-    "size": 1.0,
-    "orderID": "25248336-66d8-41ff-99fd-83489c4e6029",
-    "timestamp": 1660277763249,
-    "triggerPrice": 0.0,
-    "stopPrice": null,
-    "trigger": false,
-    "message": "",
-    "averageFillPrice": 0.0,
-    "fillSize": 0.0,
-    "clOrderID": "",
-    "stealth": 0.0,
-    "deviation": 0.0,
-    "postOnly": false,
-    "originalSize": 1.0,
-    "remainingSize": 1.0,
-    "time_in_force": "GTC"
-  }
+    {
+        "status": 2,
+        "symbol": "BTC-USD",
+        "orderType": 82,
+        "price": 0.0,
+        "side": "BUY",
+        "size": 100.0,
+        "orderID": "d32bea7e-c0f1-49da-8b41-8dd63770e1c8",
+        "timestamp": 1675481980576,
+        "triggerPrice": 0.0,
+        "stopPrice": null,
+        "trigger": false,
+        "message": "",
+        "averageFillPrice": 0.0,
+        "fillSize": 0.0,
+        "clOrderID": null,
+        "stealth": 1.0,
+        "deviation": 1.0,
+        "postOnly": false,
+        "originalSize": 100.0,
+        "remainingSize": 100.0,
+        "orderDetailType": "TWAP",
+        "time_in_force": "GTC"
+    }
 ]
 ```
 
